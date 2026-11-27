@@ -59,6 +59,7 @@ export function ChatDrawer() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [subBusy, setSubBusy] = useState(false);
+  const [ownerPremium, setOwnerPremium] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const profileKey = useMemo(
@@ -72,6 +73,11 @@ export function ChatDrawer() {
       .then((r) => r.json())
       .then((c) => setConfig(c as ChatConfig))
       .catch(() => setConfig({ aiAvailable: false, calculatorMode: true, freeCreditsPerMonth: 7, subscriptionPriceCAD: 15, subscriptionAvailable: false }));
+    // Owner premium is decided by the server (verified session +
+    // ADMIN_EMAIL) — when it answers premium, credits are bypassed.
+    void import("@/lib/accounts-client").then(({ fetchPremium }) =>
+      fetchPremium().then((p) => setOwnerPremium(p.premium)),
+    );
   }, []);
 
   useEffect(() => {
@@ -119,17 +125,19 @@ export function ChatDrawer() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, open, busy]);
 
-  const exhausted = credits ? !canSend(credits, new Date()) : false;
+  const exhausted = !ownerPremium && credits ? !canSend(credits, new Date()) : false;
 
   async function send(text: string) {
     const message = text.trim();
     if (!message || busy || !credits) return;
     const now = new Date();
-    if (!canSend(credits, now)) return;
-    const afterDeduct = deduct(credits, now);
-    if (!afterDeduct) return;
-    setCredits(afterDeduct);
-    window.localStorage.setItem(creditsKey(profileKey), JSON.stringify(afterDeduct));
+    if (!ownerPremium) {
+      if (!canSend(credits, now)) return;
+      const afterDeduct = deduct(credits, now);
+      if (!afterDeduct) return;
+      setCredits(afterDeduct);
+      window.localStorage.setItem(creditsKey(profileKey), JSON.stringify(afterDeduct));
+    }
     const nextMessages = [...messages, { role: "user" as const, text: message }];
     setMessages(nextMessages);
     setInput("");
@@ -210,7 +218,7 @@ export function ChatDrawer() {
               </div>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
                 <span className="rounded-full border border-gold/40 bg-gold/10 px-2 py-0.5 text-gold-2">
-                  {credits ? creditsHeader(credits, new Date()) : "…"}
+                  {ownerPremium ? "Unlimited — owner premium" : credits ? creditsHeader(credits, new Date()) : "…"}
                 </span>
                 {config?.calculatorMode && (
                   <span className="rounded-full border border-line bg-panel-2 px-2 py-0.5 text-mist">

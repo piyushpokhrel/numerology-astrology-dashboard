@@ -52,6 +52,17 @@ export default function RedBookPage() {
   // Entitlement state for this profile.
   useEffect(() => {
     if (profileKey) setUnlocked(hasRedBookEntitlement(profileKey));
+    // ADMIN = PREMIUM AUTOMATICALLY: /api/account/premium verifies the
+    // Supabase session + ADMIN_EMAIL server-side; a premium verdict
+    // unlocks the book with no checkout. Never a client-side flag.
+    void import("@/lib/accounts-client").then(({ fetchPremium }) =>
+      fetchPremium().then((p) => {
+        if (p.premium) {
+          setUnlocked(true);
+          setNotice("Owner sign-in — the Red Book is unlocked automatically (premium). No checkout needed.");
+        }
+      }),
+    );
   }, [profileKey]);
 
   // Is Stripe Checkout configured?
