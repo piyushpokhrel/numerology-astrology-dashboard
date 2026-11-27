@@ -221,6 +221,78 @@ export interface ChartInput {
   longitudeEast: number;
 }
 
+/* ------------------------------------------------------------------ */
+/* Derivatives (milestone 7): quality balance, chart ruler, tightest   */
+/* aspect — all read off THIS chart's computed distribution.           */
+/* ------------------------------------------------------------------ */
+
+export type Quality = "Cardinal" | "Fixed" | "Mutable";
+
+const SIGN_QUALITIES: ReadonlyArray<Quality> = [
+  "Cardinal", "Fixed", "Mutable", "Cardinal", "Fixed", "Mutable",
+  "Cardinal", "Fixed", "Mutable", "Cardinal", "Fixed", "Mutable",
+];
+
+export function qualityOf(sign: ZodiacSign): Quality {
+  return SIGN_QUALITIES[ZODIAC_SIGNS.indexOf(sign)];
+}
+
+export function signElement(sign: ZodiacSign): "Fire" | "Earth" | "Air" | "Water" {
+  return SIGN_ELEMENTS[ZODIAC_SIGNS.indexOf(sign)];
+}
+
+/** Count of the ten bodies by quality (mode) in this chart. */
+export function qualityBalance(chart: WesternChart): Record<Quality, number> {
+  const out: Record<Quality, number> = { Cardinal: 0, Fixed: 0, Mutable: 0 };
+  for (const p of chart.positions) out[qualityOf(p.sign)]++;
+  return out;
+}
+
+/** Traditional sign rulers (pre-telescope doctrine). */
+export const SIGN_RULERS: Readonly<Record<ZodiacSign, PlanetName>> = {
+  Aries: "Mars", Taurus: "Venus", Gemini: "Mercury", Cancer: "Moon",
+  Leo: "Sun", Virgo: "Mercury", Libra: "Venus", Scorpio: "Mars",
+  Sagittarius: "Jupiter", Capricorn: "Saturn", Aquarius: "Saturn",
+  Pisces: "Jupiter",
+};
+
+/** Modern co-rulers, shown only where the modern school adds one. */
+export const SIGN_MODERN_CO_RULERS: Readonly<Partial<Record<ZodiacSign, PlanetName>>> = {
+  Scorpio: "Pluto",
+  Aquarius: "Uranus",
+  Pisces: "Neptune",
+};
+
+export interface ChartRuler {
+  ruler: PlanetName;
+  modernCoRuler: PlanetName | null;
+  position: PlanetPosition;
+  note: string;
+}
+
+/**
+ * The chart ruler: the traditional ruler of the Ascendant sign, and
+ * where that ruler actually sits in THIS chart (sign + whole-sign
+ * house). Classical doctrine reads the ruler's placement as the
+ * chart's steering wheel.
+ */
+export function chartRuler(chart: WesternChart): ChartRuler {
+  const ruler = SIGN_RULERS[chart.ascendantSign];
+  const position = chart.positions.find((p) => p.body === ruler)!;
+  const modernCoRuler = SIGN_MODERN_CO_RULERS[chart.ascendantSign] ?? null;
+  return {
+    ruler,
+    modernCoRuler,
+    position,
+    note: `Your Ascendant is ${chart.ascendantSign}, ruled in the traditional scheme by ${ruler}. In this chart ${ruler} stands in ${position.sign}, house ${position.house} — the tradition reads the whole chart's direction from that placement: the Ascendant proposes, the ruler disposes.`,
+  };
+}
+
+/** The tightest aspect in the chart (smallest orb), or null when none is in orb. */
+export function tightestAspect(chart: WesternChart): Aspect | null {
+  return chart.aspects.length ? chart.aspects[0] : null;
+}
+
 export function westernChart(input: ChartInput): WesternChart {
   const { utc, latitude, longitudeEast } = input;
   const lst = localSiderealDegrees(utc, longitudeEast);

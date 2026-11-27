@@ -28,6 +28,29 @@ export type NumerologySystem = "chaldean" | "pythagorean";
 /** Master numbers recognised by this library. */
 export const MASTER_NUMBERS: readonly number[] = [11, 22, 33];
 
+/** The single-digit root beneath each master number: 11→2, 22→4, 33→6. */
+export const MASTER_ROOTS: Readonly<Record<number, number>> = { 11: 2, 22: 4, 33: 6 };
+
+export function isMasterNumber(n: number): boolean {
+  return MASTER_NUMBERS.includes(n);
+}
+
+/** The root of a master number (11→2, 22→4, 33→6); null for non-masters. */
+export function masterRoot(n: number): number | null {
+  return MASTER_ROOTS[n] ?? null;
+}
+
+/**
+ * BOTH-WAYS DISPLAY (product rule, milestone 7): a master number is
+ * ALWAYS rendered with its root — "11/2", "22/4", "33/6" — so both
+ * readings are visible wherever the number appears. Non-master values
+ * render as themselves.
+ */
+export function displayNumber(n: number): string {
+  const root = masterRoot(n);
+  return root === null ? String(n) : `${n}/${root}`;
+}
+
 /* ------------------------------------------------------------------ */
 /* Reduction helpers                                                   */
 /* ------------------------------------------------------------------ */
@@ -413,4 +436,190 @@ export function coreProfile(
     personalDay: personalDay(dobParts, cycle),
     cycleDate: cycleIso,
   };
+}
+
+/**
+ * The both-ways display strings for every core-profile field that can
+ * hold a master number. This is the canonical "core profile output"
+ * the UI renders from — a master value can never appear here without
+ * its root pairing (locked by tests/derivatives.test.ts).
+ */
+export function coreProfileDisplays(core: CoreProfile): Record<string, string> {
+  return {
+    lifePath: displayNumber(core.lifePath),
+    birthday: displayNumber(core.birthday),
+    attitude: displayNumber(core.attitude),
+    destinyPythagorean: displayNumber(core.destinyPythagorean),
+    destinyChaldean: displayNumber(core.destinyChaldean),
+    soulUrge: displayNumber(core.soulUrge),
+    personality: displayNumber(core.personality),
+    chaldeanNameRoot: displayNumber(core.chaldeanName.root),
+    pythagoreanNameRoot: displayNumber(core.pythagoreanName.root),
+    personalYear: displayNumber(core.personalYear),
+    personalMonth: displayNumber(core.personalMonth),
+    personalDay: displayNumber(core.personalDay),
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Derivatives — Pinnacles, Challenges, and the secondary numbers      */
+/*                                                                     */
+/* All formulas follow the published Decoz method (worldnumerology    */
+/* .com, "How to Do Your Own Numerology Reading", verified Nov 2026): */
+/*   PINNACLES — components reduced keeping 11 and 22 (Decoz keeps    */
+/*   master numbers in Pinnacle sums; a sum of 33 reduces to 6, the   */
+/*   convention his school states for Pinnacles specifically).        */
+/*   P1 = month + day · P2 = day + year · P3 = P1 + P2 · P4 = month   */
+/*   + year. Timing: the First Pinnacle runs from birth through age   */
+/*   36 − (single-digit Life Path root); Second and Third run nine    */
+/*   years each; the Fourth runs for the remainder of life.           */
+/*   CHALLENGES — components reduced ALL the way to single digits     */
+/*   (Decoz: "ignore the Master numbers"); differences of the parts.  */
+/*   MATURITY = Life Path + Destiny, masters preserved.               */
+/*   BALANCE = initials of the full name; masters do not apply.       */
+/*   RATIONAL THOUGHT = first-name letter sum + day of birth;         */
+/*   masters do not apply.                                            */
+/*   GROWTH = the first name's letters alone, reduced to one digit    */
+/*   (the "key number" of the first name in the published tradition). */
+/* ------------------------------------------------------------------ */
+
+/** Pinnacle reduction: keep 11 and 22; 33 continues to 6 (Decoz Pinnacle rule). */
+export function reducePinnacle(n: number): number {
+  let x = Math.abs(Math.trunc(n));
+  while (x > 9) {
+    if (x === 11 || x === 22) return x;
+    x = digitSum(x);
+  }
+  return x;
+}
+
+export interface Pinnacle {
+  index: 1 | 2 | 3 | 4;
+  value: number;
+  /** The arithmetic, with this person's actual components substituted. */
+  formula: string;
+  /** First age (in years) the pinnacle covers. */
+  startAge: number;
+  /** Last age covered; null = remainder of life. */
+  endAge: number | null;
+}
+
+export interface PinnacleSet {
+  pinnacles: Pinnacle[];
+  /** 36 − Life Path root: the age the First Pinnacle runs through. */
+  firstEndAge: number;
+  lifePathRoot: number;
+}
+
+export function pinnacles(dob: string | DateParts): PinnacleSet {
+  const lp = lifePath(dob);
+  const m = lp.monthComponent;
+  const d = lp.dayComponent;
+  const y = lp.yearComponent;
+  const p1 = reducePinnacle(m + d);
+  const p2 = reducePinnacle(d + y);
+  const p3 = reducePinnacle(p1 + p2);
+  const p4 = reducePinnacle(m + y);
+  const lifePathRoot = reduceNumber(lp.value, false);
+  const firstEndAge = 36 - lifePathRoot;
+  return {
+    lifePathRoot,
+    firstEndAge,
+    pinnacles: [
+      { index: 1, value: p1, formula: `month ${m} + day ${d} = ${m + d} → ${p1}`, startAge: 0, endAge: firstEndAge },
+      { index: 2, value: p2, formula: `day ${d} + year ${y} = ${d + y} → ${p2}`, startAge: firstEndAge + 1, endAge: firstEndAge + 9 },
+      { index: 3, value: p3, formula: `Pinnacle 1 (${p1}) + Pinnacle 2 (${p2}) = ${p1 + p2} → ${p3}`, startAge: firstEndAge + 10, endAge: firstEndAge + 18 },
+      { index: 4, value: p4, formula: `month ${m} + year ${y} = ${m + y} → ${p4}`, startAge: firstEndAge + 19, endAge: null },
+    ],
+  };
+}
+
+export interface ChallengeSet {
+  first: number;
+  second: number;
+  /** The Main (third) Challenge — |first − second|, in force for most of life. */
+  main: number;
+  fourth: number;
+  formulas: { first: string; second: string; main: string; fourth: string };
+  /** The fully-reduced components the differences were taken from. */
+  components: { month: number; day: number; year: number };
+}
+
+export function challenges(dob: string | DateParts): ChallengeSet {
+  const { year, month, day } = toParts(dob);
+  const m = reduceNumber(month, false);
+  const d = reduceNumber(day, false);
+  const y = reduceNumber(digitSum(year), false);
+  const first = Math.abs(m - d);
+  const second = Math.abs(d - y);
+  const main = Math.abs(first - second);
+  const fourth = Math.abs(m - y);
+  return {
+    first,
+    second,
+    main,
+    fourth,
+    components: { month: m, day: d, year: y },
+    formulas: {
+      first: `|month ${m} − day ${d}| = ${first}`,
+      second: `|day ${d} − year ${y}| = ${second}`,
+      main: `|First ${first} − Second ${second}| = ${main}`,
+      fourth: `|month ${m} − year ${y}| = ${fourth}`,
+    },
+  };
+}
+
+/** The first name (first word) of a full name, letters only, upper-cased. */
+export function firstNameOf(fullName: string): string {
+  const words = fullName.toUpperCase().split(/[^A-Z]+/).filter(Boolean);
+  return words[0] ?? "";
+}
+
+function letterSum(word: string, system: NumerologySystem): number {
+  return [...word].reduce((acc, ch) => acc + letterValue(ch, system), 0);
+}
+
+/** Maturity number — Life Path + Destiny (Pythagorean), masters preserved (Decoz). */
+export function maturityNumber(fullName: string, dob: string | DateParts): number {
+  return reduceNumber(lifePathNumber(dob) + destinyNumber(fullName, "pythagorean"), true);
+}
+
+/** Balance number — the initials of the full name, summed and fully reduced (Decoz: masters do not apply). */
+export function balanceNumber(fullName: string): number {
+  const initials = fullName
+    .toUpperCase()
+    .split(/[^A-Z]+/)
+    .filter(Boolean)
+    .map((w) => w[0]);
+  const sum = initials.reduce((acc, ch) => acc + letterValue(ch, "pythagorean"), 0);
+  return reduceNumber(sum, false);
+}
+
+/**
+ * Rational Thought number — first-name letter sum (Pythagorean) + the
+ * day of birth, fully reduced (Decoz: masters do not apply). Reducing
+ * the day first or not makes no difference to the fully-reduced total.
+ */
+export function rationalThoughtNumber(fullName: string, dob: string | DateParts): number {
+  const { day } = toParts(dob);
+  return reduceNumber(letterSum(firstNameOf(fullName), "pythagorean") + day, false);
+}
+
+/** Growth number — the first name's letters alone, reduced to a single digit. */
+export function growthNumber(fullName: string): number {
+  return reduceNumber(letterSum(firstNameOf(fullName), "pythagorean"), false);
+}
+
+/**
+ * The compound family of a root: every compound in Cheiro's read range
+ * (10–52) that reduces to that root — e.g. root 4 → 13, 22, 31, 40, 49.
+ * The tradition reads family members as variations on the root's theme,
+ * each with its own compound flavour (Cheiro's table).
+ */
+export function compoundFamily(root: number): number[] {
+  const out: number[] = [];
+  for (let c = 10; c <= 52; c++) {
+    if (reduceNumber(c, false) === root) out.push(c);
+  }
+  return out;
 }

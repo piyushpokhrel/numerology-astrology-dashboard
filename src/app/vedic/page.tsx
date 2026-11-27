@@ -4,7 +4,14 @@ import { useMemo } from "react";
 import { useProfile } from "@/components/ProfileProvider";
 import { ChartWorkbench } from "@/components/ChartWorkbench";
 import { Badge, Card, NoProfile, PageHeader, Stat } from "@/components/ui";
-import { dashaAt, vedicChart } from "@/lib/vedic";
+import {
+  antardashaAt,
+  antardashas,
+  dashaAt,
+  nakshatraLordChain,
+  padaReading,
+  vedicChart,
+} from "@/lib/vedic";
 import { formatInSign, type ChartInput } from "@/lib/western";
 import { formatLongDate } from "@/lib/profile";
 
@@ -37,11 +44,18 @@ function VedicResults({ input, today }: { input: ChartInput; today: string }) {
     () => (today ? dashaAt(chart.dashas, new Date(`${today}T12:00:00`)) : null),
     [chart, today],
   );
+  const currentSub = useMemo(
+    () => (current && today ? antardashaAt(current, new Date(`${today}T12:00:00`)) : null),
+    [current, today],
+  );
+  const currentSubs = useMemo(() => (current ? antardashas(current) : []), [current]);
+  const pada = useMemo(() => padaReading(chart), [chart]);
+  const chain = useMemo(() => nakshatraLordChain(chart), [chart]);
   const moon = chart.grahas.find((g) => g.body === "Moon")!;
 
   return (
     <div className="grid gap-4">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Lagna (ascendant)" value={formatInSign(chart.lagna.sidereal)} accent sub="Sidereal" />
         <Stat
           label="Moon nakshatra"
@@ -57,7 +71,68 @@ function VedicResults({ input, today }: { input: ChartInput; today: string }) {
               : "Outside the computed timeline"
           }
         />
+        <Stat
+          label="Current Antardasha (sub-period)"
+          value={<span className="text-2xl">{currentSub ? `${currentSub.lord} Antardasha` : "—"}</span>}
+          sub={
+            currentSub
+              ? `${currentSub.startISO.slice(0, 10)} → ${currentSub.endISO.slice(0, 10)} · inside ${current?.lord} Mahadasha`
+              : "Outside the computed timeline"
+          }
+        />
       </div>
+
+      <Card
+        title={pada.heading}
+        subtitle="Your Moon's pada and the nakshatra-lord chain — from your Moon's actual position (BPHS — classical)"
+      >
+        <div className="space-y-2">
+          {pada.lines.map((line) => (
+            <p key={line.slice(0, 32)} className="text-sm leading-relaxed text-mist">
+              {line}
+            </p>
+          ))}
+          {chain.map((line) => (
+            <p key={line.slice(0, 32)} className="text-sm leading-relaxed text-mist">
+              {line}
+            </p>
+          ))}
+        </div>
+      </Card>
+
+      {current && (
+        <Card
+          title={`Antardashas inside the current ${current.lord} Mahadasha`}
+          subtitle="Parashari proportion: each sub-period lasts (its lord's years ÷ 120) of the Mahadasha span — the same table the Red Book prints"
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[480px] text-left text-sm">
+              <thead>
+                <tr className="text-xs uppercase tracking-wider text-fog">
+                  <th className="py-2 pr-3 font-medium">Antardasha</th>
+                  <th className="py-2 pr-3 font-medium">Starts</th>
+                  <th className="py-2 font-medium">Ends</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentSubs.map((s) => {
+                  const isCurrentSub = currentSub?.startISO === s.startISO;
+                  return (
+                    <tr key={s.startISO} className={`border-t border-line ${isCurrentSub ? "bg-gold/5" : ""}`}>
+                      <td className="py-2 pr-3 font-medium text-moon">
+                        {current.lord} / {s.lord}
+                        {isCurrentSub && <Badge tone="gold">current</Badge>}
+                      </td>
+                      <td className="py-2 pr-3 text-mist">{s.startISO.slice(0, 10)}</td>
+                      <td className="py-2 text-mist">{s.endISO.slice(0, 10)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
 
       <Card title="Graha positions — Rashi (D1)" subtitle="Sidereal sign placements; tropical shown so the ayanamsa shift is visible">
         <div className="overflow-x-auto">

@@ -186,6 +186,149 @@ export function dashaAt(periods: readonly DashaPeriod[], when: Date): DashaPerio
 }
 
 /* ------------------------------------------------------------------ */
+/* Antardasha (sub-periods) — moved here from redbook.ts in            */
+/* milestone 7 so the free Vedic page and the Red Book share one       */
+/* implementation (redbook.ts re-exports for compatibility).           */
+/* ------------------------------------------------------------------ */
+
+export interface SubPeriod {
+  lord: string;
+  startISO: string;
+  endISO: string;
+}
+
+/**
+ * Antardashas within one Mahadasha: the nine lords in sequence from
+ * the Mahadasha lord, each lasting (its Vimshottari years / 120) of
+ * the Mahadasha's actual span — the standard Parashari proportion.
+ * Exact for full Mahadashas; for the balance period it divides the
+ * remaining span proportionally (stated method).
+ */
+export function antardashas(maha: DashaPeriod): SubPeriod[] {
+  const lords = Object.keys(DASHA_YEARS) as Array<keyof typeof DASHA_YEARS>;
+  const startIdx = lords.indexOf(maha.lord as keyof typeof DASHA_YEARS);
+  const start = Date.parse(maha.startISO);
+  const spanMs = Date.parse(maha.endISO) - start;
+  const out: SubPeriod[] = [];
+  let cursor = start;
+  for (let i = 0; i < 9; i++) {
+    const lord = lords[(startIdx + i) % 9];
+    const portion = (DASHA_YEARS[lord] / 120) * spanMs;
+    const end = i === 8 ? Date.parse(maha.endISO) : cursor + portion;
+    out.push({
+      lord,
+      startISO: new Date(cursor).toISOString(),
+      endISO: new Date(end).toISOString(),
+    });
+    cursor = end;
+  }
+  return out;
+}
+
+/** The Antardasha in force at an instant inside a Mahadasha, if any. */
+export function antardashaAt(maha: DashaPeriod, when: Date): SubPeriod | null {
+  const t = when.getTime();
+  return (
+    antardashas(maha).find(
+      (s) => t >= Date.parse(s.startISO) && t < Date.parse(s.endISO),
+    ) ?? null
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Navamsa + pada + the Moon's nakshatra-lord chain (milestone 7)      */
+/* ------------------------------------------------------------------ */
+
+import { ZODIAC_SIGNS, type ZodiacSign as ZSign } from "./western.ts";
+
+/** Traditional sign rulers (used for navamsa/pada readings). */
+export const SIGN_RULERS: Readonly<Record<string, string>> = {
+  Aries: "Mars", Taurus: "Venus", Gemini: "Mercury", Cancer: "Moon",
+  Leo: "Sun", Virgo: "Mercury", Libra: "Venus", Scorpio: "Mars",
+  Sagittarius: "Jupiter", Capricorn: "Saturn", Aquarius: "Saturn",
+  Pisces: "Jupiter",
+};
+
+const SIGN_ELEMENT_OF: Readonly<Record<string, string>> = {
+  Aries: "Fire", Leo: "Fire", Sagittarius: "Fire",
+  Taurus: "Earth", Virgo: "Earth", Capricorn: "Earth",
+  Gemini: "Air", Libra: "Air", Aquarius: "Air",
+  Cancer: "Water", Scorpio: "Water", Pisces: "Water",
+};
+
+/**
+ * The navamsa (D9) sign of a sidereal longitude: each pada of 3°20′ is
+ * one navamsa, counted continuously from Aries — pada 1 of Ashwini
+ * (0° Aries) is Aries itself, and the count runs through the zodiac.
+ */
+export function navamsaSign(siderealLongitude: number): ZSign {
+  const idx = Math.floor(norm360(siderealLongitude) / PADA_SPAN) % 12;
+  return ZODIAC_SIGNS[idx];
+}
+
+/**
+ * Pada reading for the Moon's nakshatra, individualised: the pada's
+ * navamsa sign, its element and ruler, woven with the Moon's actual
+ * position. Tradition reads the pada as the Moon's inner orientation
+ * (the D9 colouring of the birth star).
+ */
+export function padaReading(chart: VedicChart): { heading: string; lines: string[]; source: string } {
+  const nak = chart.moonNakshatra;
+  const moon = chart.grahas.find((g) => g.body === "Moon")!;
+  const nav = navamsaSign(moon.sidereal);
+  return {
+    heading: `${nak.name}, pada ${nak.pada} — navamsa ${nav}`,
+    lines: [
+      `Your Moon stands at ${moon.sidereal.toFixed(2)}° sidereal — ${(nak.traversed * 100).toFixed(1)}% through ${nak.name} — which places it in pada ${nak.pada} of 4. Each pada is 3°20′ of arc; pada ${nak.pada} spans ${(nak.startDeg + (nak.pada - 1) * PADA_SPAN).toFixed(2)}°–${(nak.startDeg + nak.pada * PADA_SPAN).toFixed(2)}°.`,
+      `Pada ${nak.pada} of ${nak.name} falls in navamsa ${nav} — a ${SIGN_ELEMENT_OF[nav]} sign ruled by ${SIGN_RULERS[nav]}. In the Parashari reading the pada colours the birth star with that sign's temperament: the Moon's ${nak.name} nature, expressed through ${nav}.`,
+      `The four padas of ${nak.name} run ${[0, 1, 2, 3].map((i) => navamsaSign(nak.startDeg + i * PADA_SPAN + 0.01)).join(", ")} — yours is the ${["first", "second", "third", "fourth"][nak.pada - 1]}, ${nav}.`,
+    ],
+    source: "Brihat Parashara Hora Shastra — nakshatra/pada and navamsa doctrine (classical).",
+  };
+}
+
+export interface LordChainLink {
+  text: string;
+}
+
+/**
+ * The Moon's nakshatra-lord chain: the lord of the Moon's nakshatra,
+ * then where THAT lord stands and which nakshatra IT occupies (and its
+ * lord). Rahu/Ketu links are stated honestly — this build computes no
+ * node longitudes, so the chain reports the dasha consequence instead
+ * of inventing a position.
+ */
+export function nakshatraLordChain(chart: VedicChart): string[] {
+  const nak = chart.moonNakshatra;
+  const lines: string[] = [
+    `Chain link 1 — the Moon's star: ${nak.name} is ruled by ${nak.lord}. That lordship is why your Vimshottari sequence opens with the ${nak.lord} Mahadasha (balance ${(chart.dashas[0]?.years ?? 0).toFixed(2)} years at birth).`,
+  ];
+  const lordGraha = chart.grahas.find((g) => g.body === (nak.lord as string));
+  if (lordGraha) {
+    const lordNak = nakshatraOf(lordGraha.sidereal);
+    lines.push(
+      `Chain link 2 — where the lord stands: ${lordGraha.graha} is at ${lordGraha.sidereal.toFixed(2)}° sidereal in ${lordGraha.sign}, itself occupying ${lordNak.name} (pada ${lordNak.pada}), which is ruled by ${lordNak.lord}. The Moon's timing lord is thus coloured by ${lordNak.name}'s star and answers, in turn, to ${lordNak.lord}.`,
+    );
+  } else {
+    lines.push(
+      `Chain link 2 — stated honestly: ${nak.lord} is a node (chaya graha). This build computes no Rahu/Ketu longitudes (astronomy-engine has no node ephemeris), so the chain cannot follow ${nak.lord} to a sign. What is exact is the timing consequence above: the ${nak.lord} period opens your dasha sequence.`,
+    );
+  }
+  return lines;
+}
+
+/**
+ * Graha–number correspondence of modern Indian numerology (the Mulank
+ * tradition): Sun 1, Moon 2, Jupiter 3, Rahu 4, Mercury 5, Venus 6,
+ * Ketu 7, Saturn 8, Mars 9. Used only for cross-system convergence
+ * checks, and labelled MODERN wherever it appears.
+ */
+export const GRAHA_NUMBERS: Readonly<Record<DashaLord, number>> = {
+  Sun: 1, Moon: 2, Jupiter: 3, Rahu: 4, Mercury: 5,
+  Venus: 6, Ketu: 7, Saturn: 8, Mars: 9,
+};
+
+/* ------------------------------------------------------------------ */
 /* Whole sidereal chart                                                */
 /* ------------------------------------------------------------------ */
 

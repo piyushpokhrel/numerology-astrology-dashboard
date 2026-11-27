@@ -4,7 +4,13 @@ import { useMemo } from "react";
 import { useProfile } from "@/components/ProfileProvider";
 import { ChartWorkbench } from "@/components/ChartWorkbench";
 import { Badge, Card, NoProfile, PageHeader, Stat } from "@/components/ui";
-import { formatInSign, westernChart } from "@/lib/western";
+import {
+  chartRuler,
+  formatInSign,
+  qualityBalance,
+  tightestAspect,
+  westernChart,
+} from "@/lib/western";
 
 export default function WesternPage() {
   const { profile, loaded } = useProfile();
@@ -29,6 +35,10 @@ export default function WesternPage() {
 
 function WesternResults({ input }: { input: Parameters<typeof westernChart>[0] }) {
   const chart = useMemo(() => westernChart(input), [input]);
+  const qualities = useMemo(() => qualityBalance(chart), [chart]);
+  const ruler = useMemo(() => chartRuler(chart), [chart]);
+  const tightest = useMemo(() => tightestAspect(chart), [chart]);
+  const dominantQuality = (Object.entries(qualities).sort((a, b) => b[1] - a[1])[0] ?? ["Cardinal", 0]) as [string, number];
 
   return (
     <div className="grid gap-4">
@@ -46,6 +56,38 @@ function WesternResults({ input }: { input: Parameters<typeof westernChart>[0] }
           sub="Across the ten bodies"
         />
       </div>
+
+      <Card
+        title="This chart's own balances — quality, ruler, loudest aspect"
+        subtitle="Derivatives read off this chart's computed distribution (traditional rulership doctrine)"
+      >
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Stat
+            label="Quality balance"
+            value={
+              <span className="text-lg">
+                Cardinal {qualities.Cardinal} · Fixed {qualities.Fixed} · Mutable {qualities.Mutable}
+              </span>
+            }
+            sub={`${dominantQuality[0]} leads with ${dominantQuality[1]} of 10 — ${dominantQuality[0] === "Cardinal" ? "an initiating chart" : dominantQuality[0] === "Fixed" ? "a consolidating chart" : "an adapting chart"}`}
+          />
+          <Stat
+            label={`Chart ruler — ${ruler.ruler}`}
+            value={<span className="text-lg">{ruler.position.sign}, house {ruler.position.house}</span>}
+            sub={`Ruler of your ${chart.ascendantSign} Ascendant${ruler.modernCoRuler ? ` · modern co-ruler ${ruler.modernCoRuler}` : ""}`}
+          />
+          <Stat
+            label="Tightest aspect"
+            value={
+              <span className="text-lg">
+                {tightest ? `${tightest.a} ${tightest.type} ${tightest.b}` : "—"}
+              </span>
+            }
+            sub={tightest ? `Orb ${tightest.orb.toFixed(2)}° — the closest to exact of ${chart.aspects.length}` : "No aspect within orb"}
+          />
+        </div>
+        <p className="mt-3 text-sm leading-relaxed text-mist">{ruler.note}</p>
+      </Card>
 
       <Card title="Planet positions" subtitle="Longitude, sign, and whole-sign house — every value computed, none hard-coded">
         <div className="overflow-x-auto">

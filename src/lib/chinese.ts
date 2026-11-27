@@ -324,6 +324,194 @@ const ELEMENT_NOTES: Readonly<Record<ElementRelation, string>> = {
     "Your element restrains the year's — a year where your discipline shapes outcomes.",
 };
 
+/* ------------------------------------------------------------------ */
+/* Sexagenary day + hour pillars (BaZi-lite, milestone 7)              */
+/*                                                                     */
+/* DAY PILLAR — a continuous 60-day cycle, independent of months and  */
+/* years. Computed from the Julian Day Number with Y.T. Liu's         */
+/* published formula: r = (JDN + 49) mod 60; stem = r mod 10          */
+/* (0 = Jia), branch = r mod 12 (0 = Zi). Verified anchors:           */
+/* 2000-01-01 = Wu-Wu, 2019-01-27 = Jia-Zi, 2024-02-10 = Jia-Chen —   */
+/* all four published anchors agree (locked in tests).                */
+/*                                                                     */
+/* HOUR PILLAR — the branch is fixed by the double-hour (Zi hour      */
+/* 23:00–01:00, then every two hours). The stem follows the Five Rats */
+/* rule (五鼠遁): the Zi-hour stem is set by the day stem — Jia/Ji    */
+/* days start Jia, Yi/Geng start Bing, Bing/Xin start Wu, Ding/Ren    */
+/* start Geng, Wu/Gui start Ren — then one stem per double-hour.      */
+/* Convention stated: for a 23:00 birth the NEXT day's stem is used   */
+/* (the day turns at 23:00 in this convention). Clock time as given;  */
+/* no true-solar-time correction is applied — stated, not hidden.     */
+/* ------------------------------------------------------------------ */
+
+export const HEAVENLY_STEMS = [
+  "Jia", "Yi", "Bing", "Ding", "Wu", "Ji", "Geng", "Xin", "Ren", "Gui",
+] as const;
+
+export const EARTHLY_BRANCHES = [
+  "Zi", "Chou", "Yin", "Mao", "Chen", "Si", "Wu", "Wei", "Shen", "You", "Xu", "Hai",
+] as const;
+
+/** The animal carried by each earthly branch, Zi → Hai. */
+export const BRANCH_ANIMALS: readonly ZodiacAnimal[] = [
+  "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake",
+  "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig",
+];
+
+/** Main-qi element of each branch, Zi → Hai. */
+const BRANCH_ELEMENTS: readonly ChineseElement[] = [
+  "Water", "Earth", "Wood", "Wood", "Earth", "Fire",
+  "Fire", "Earth", "Metal", "Metal", "Earth", "Water",
+];
+
+/** Julian Day Number for a Gregorian calendar date (integer, day beginning at noon convention aside — the standard civil formula). */
+export function julianDayNumber(year: number, month: number, day: number): number {
+  const a = Math.floor((14 - month) / 12);
+  const y = year + 4800 - a;
+  const m = month + 12 * a - 3;
+  return (
+    day +
+    Math.floor((153 * m + 2) / 5) +
+    365 * y +
+    Math.floor(y / 4) -
+    Math.floor(y / 100) +
+    Math.floor(y / 400) -
+    32045
+  );
+}
+
+export interface DayPillar {
+  stem: string;
+  branch: string;
+  stemIndex: number;
+  branchIndex: number;
+  /** Position in the 60-cycle, 1 (Jia-Zi) … 60 (Gui-Hai). */
+  cycleNumber: number;
+  stemElement: ChineseElement;
+  branchElement: ChineseElement;
+  animal: ZodiacAnimal;
+}
+
+/** The sexagenary day pillar for a calendar date (ISO or parts). */
+export function dayPillar(date: string | DateParts): DayPillar {
+  const { year, month, day } = toParts(date);
+  const jdn = julianDayNumber(year, month, day);
+  const r = mod(jdn + 49, 60);
+  const stemIndex = r % 10;
+  const branchIndex = r % 12;
+  return {
+    stem: HEAVENLY_STEMS[stemIndex],
+    branch: EARTHLY_BRANCHES[branchIndex],
+    stemIndex,
+    branchIndex,
+    cycleNumber: r + 1,
+    stemElement: STEM_ELEMENTS[stemIndex],
+    branchElement: BRANCH_ELEMENTS[branchIndex],
+    animal: BRANCH_ANIMALS[branchIndex],
+  };
+}
+
+export interface HourPillar extends DayPillar {
+  /** The double-hour window, e.g. "11:00–13:00". */
+  window: string;
+  /** Which date's day stem drove the Five Rats rule. */
+  dayStemDate: string;
+  note: string;
+}
+
+const HOUR_WINDOWS: readonly string[] = [
+  "23:00–01:00", "01:00–03:00", "03:00–05:00", "05:00–07:00",
+  "07:00–09:00", "09:00–11:00", "11:00–13:00", "13:00–15:00",
+  "15:00–17:00", "17:00–19:00", "19:00–21:00", "21:00–23:00",
+];
+
+function addDaysISO(iso: string, days: number): string {
+  const { year, month, day } = parseISODate(iso);
+  const d = new Date(Date.UTC(year, month - 1, day) + days * 86400_000);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * The sexagenary hour pillar for a birth date + local clock time
+ * ("HH:MM"). Returns null when no usable time is supplied — the caller
+ * states that honestly instead of assuming one.
+ */
+export function hourPillar(
+  dateISO: string,
+  timeHHMM: string | undefined,
+): HourPillar | null {
+  if (!timeHHMM || !/^\d{2}:\d{2}$/.test(timeHHMM)) return null;
+  const hh = Number(timeHHMM.slice(0, 2));
+  const mm = Number(timeHHMM.slice(3, 5));
+  if (hh > 23 || mm > 59) return null;
+  const branchIndex = Math.floor(((hh + 1) % 24) / 2);
+  // 23:00 births: the day turns at 23:00 in this convention.
+  const dayStemDate = hh === 23 ? addDaysISO(dateISO, 1) : dateISO;
+  const day = dayPillar(dayStemDate);
+  const ziStemIndex = (day.stemIndex % 5) * 2; // Five Rats rule
+  const stemIndex = mod(ziStemIndex + branchIndex, 10);
+  return {
+    stem: HEAVENLY_STEMS[stemIndex],
+    branch: EARTHLY_BRANCHES[branchIndex],
+    stemIndex,
+    branchIndex,
+    cycleNumber: mod(stemIndex * 6 - branchIndex * 5, 60) + 1,
+    stemElement: STEM_ELEMENTS[stemIndex],
+    branchElement: BRANCH_ELEMENTS[branchIndex],
+    animal: BRANCH_ANIMALS[branchIndex],
+    window: HOUR_WINDOWS[branchIndex],
+    dayStemDate,
+    note:
+      hh === 23
+        ? "Born in the 23:00 Zi hour: this engine applies the next day's stem (the day turns at 23:00 in the convention used here)."
+        : "Clock time as recorded; no true-solar-time correction is applied.",
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Five-year relations (milestone 7 derivative)                        */
+/* ------------------------------------------------------------------ */
+
+export interface YearRelation {
+  year: number;
+  animal: ZodiacAnimal;
+  element: ChineseElement;
+  polarity: "Yang" | "Yin";
+  relation: SignRelation;
+  elementRelation: ElementRelation;
+}
+
+export const RELATION_LABELS: Readonly<Record<SignRelation, string>> = {
+  "own-sign": "Own sign",
+  "secret-friend": "Secret friend (六合)",
+  trine: "Trine ally (三合)",
+  clash: "Clash (六冲)",
+  neutral: "Neutral",
+};
+
+/** The profile's sign read against each of the next `count` zodiac years, starting at `fromYear`. */
+export function fiveYearRelations(
+  profile: ChineseProfile,
+  fromYear: number,
+  count = 5,
+): YearRelation[] {
+  const out: YearRelation[] = [];
+  for (let i = 0; i < count; i++) {
+    const year = fromYear + i;
+    const animal = animalForZodiacYear(year);
+    const stem = stemForZodiacYear(year);
+    out.push({
+      year,
+      animal,
+      element: stem.element,
+      polarity: stem.polarity,
+      relation: relationBetween(profile.animal, animal),
+      elementRelation: elementRelation(profile.element, stem.element),
+    });
+  }
+  return out;
+}
+
 /**
  * Outlook for a birth sign in a given zodiac year, e.g. a Horse profile
  * read against 2027 (Fire Goat, from Feb 6, 2027).

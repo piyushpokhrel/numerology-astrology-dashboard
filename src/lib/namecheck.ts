@@ -25,6 +25,7 @@
 import {
   analyzeName,
   destinyNumber,
+  displayNumber,
   lifePathNumber,
   reduceNumber,
 } from "./numerology.ts";
@@ -81,23 +82,23 @@ function scoreSystem(
   if (rootBase === lifePathBase) {
     points += 30;
     reasons.push(
-      `${label} root ${analysis.root} matches the founder's Life Path ${lifePathBase} exactly (+30).`,
+      `${label} root ${displayNumber(analysis.root)} matches the founder's Life Path ${lifePathBase} exactly (+30).`,
     );
   } else if (sameTriad(rootBase, lifePathBase)) {
     points += 15;
     reasons.push(
-      `${label} root ${analysis.root} shares a harmony triad with Life Path ${lifePathBase} (+15).`,
+      `${label} root ${displayNumber(analysis.root)} shares a harmony triad with Life Path ${lifePathBase} (+15).`,
     );
   } else {
     reasons.push(
-      `${label} root ${analysis.root} has no direct Life Path resonance (+0).`,
+      `${label} root ${displayNumber(analysis.root)} has no direct Life Path resonance (+0).`,
     );
   }
 
   if (rootBase === destinyBase) {
     points += 20;
     reasons.push(
-      `${label} root ${analysis.root} also matches the founder's Destiny ${destinyBase} (+20).`,
+      `${label} root ${displayNumber(analysis.root)} also matches the founder's Destiny ${destinyBase} (+20).`,
     );
   }
 

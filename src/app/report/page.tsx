@@ -11,7 +11,7 @@ import { useMemo } from "react";
 import { useProfile } from "@/components/ProfileProvider";
 import { ChartWorkbench } from "@/components/ChartWorkbench";
 import { Button, NoProfile, PageHeader } from "@/components/ui";
-import { coreProfile } from "@/lib/numerology";
+import { coreProfile, displayNumber } from "@/lib/numerology";
 import { numberMeaning } from "@/lib/meanings";
 import { chineseProfile, yearOutlook } from "@/lib/chinese";
 import { formatInSign, westernChart, type ChartInput } from "@/lib/western";
@@ -127,15 +127,15 @@ function ReportDocument({
       <h2 className={h2}>1 · Numerology — Chaldean & Pythagorean</h2>
       <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
         {[
-          ["Life Path", `${core.lifePath} (compound ${core.lifePathCompound})`],
-          ["Birthday", core.birthday],
-          ["Attitude", core.attitude],
-          ["Destiny — Pythagorean", core.destinyPythagorean],
-          ["Destiny — Chaldean", core.destinyChaldean],
-          ["Soul Urge", core.soulUrge],
-          ["Personality", core.personality],
-          ["Chaldean name", `${core.chaldeanName.root} (compound ${core.chaldeanName.compound})`],
-          ["Pythagorean name", `${core.pythagoreanName.root} (compound ${core.pythagoreanName.compound})`],
+          ["Life Path", `${displayNumber(core.lifePath)} (compound ${core.lifePathCompound})`],
+          ["Birthday", displayNumber(core.birthday)],
+          ["Attitude", displayNumber(core.attitude)],
+          ["Destiny — Pythagorean", displayNumber(core.destinyPythagorean)],
+          ["Destiny — Chaldean", displayNumber(core.destinyChaldean)],
+          ["Soul Urge", displayNumber(core.soulUrge)],
+          ["Personality", displayNumber(core.personality)],
+          ["Chaldean name", `${displayNumber(core.chaldeanName.root)} (compound ${core.chaldeanName.compound})`],
+          ["Pythagorean name", `${displayNumber(core.pythagoreanName.root)} (compound ${core.pythagoreanName.compound})`],
         ].map(([label, value]) => (
           <div key={label} className="flex justify-between border-b border-neutral-200 py-1">
             <span className="text-neutral-600">{label}</span>

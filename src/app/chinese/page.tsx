@@ -5,11 +5,15 @@ import { useProfile } from "@/components/ProfileProvider";
 import { Badge, Card, NoProfile, PageHeader, Stat } from "@/components/ui";
 import {
   chineseProfile,
+  dayPillar,
+  fiveYearRelations,
+  hourPillar,
   yearOutlook,
   zodiacYearForDate,
   animalForZodiacYear,
   stemForZodiacYear,
   CNY_DATES,
+  RELATION_LABELS,
 } from "@/lib/chinese";
 import { formatLongDate } from "@/lib/profile";
 
@@ -33,7 +37,10 @@ export default function ChinesePage() {
     const currentOutlook = yearOutlook(cp, currentZodiacYear);
     const outlook2027 = yearOutlook(cp, 2027);
     const nextCny = CNY_DATES[currentZodiacYear + 1];
-    return { cp, currentZodiacYear, currentAnimal, currentStem, currentOutlook, outlook2027, nextCny };
+    const fiveYears = fiveYearRelations(cp, currentZodiacYear, 5);
+    const day = dayPillar(profile.dob);
+    const hour = hourPillar(profile.dob, profile.birthTime);
+    return { cp, currentZodiacYear, currentAnimal, currentStem, currentOutlook, outlook2027, nextCny, fiveYears, day, hour };
   }, [profile, today]);
 
   if (!loaded) return <p className="text-sm text-mist">Loading…</p>;
@@ -130,6 +137,83 @@ export default function ChinesePage() {
             how its ruling sign stands to yours — ally, trine, neutral or
             clash — together with the element interaction above.
           </p>
+        </Card>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <Card
+          title="Your sign vs the next five years"
+          subtitle="Each year named by its relation to your sign — ally, clash, or neutral (traditional doctrine)"
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[420px] text-left text-sm">
+              <thead>
+                <tr className="text-xs uppercase tracking-wider text-fog">
+                  <th className="py-2 pr-3 font-medium">Year</th>
+                  <th className="py-2 pr-3 font-medium">Sign</th>
+                  <th className="py-2 pr-3 font-medium">Relation to your {cp.animal}</th>
+                  <th className="py-2 font-medium">Element interplay</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.fiveYears.map((r) => (
+                  <tr key={r.year} className="border-t border-line">
+                    <td className="py-2 pr-3 font-medium text-moon">{r.year}</td>
+                    <td className="py-2 pr-3 text-mist">{r.element} {r.animal}</td>
+                    <td className="py-2 pr-3 text-gold-2">{RELATION_LABELS[r.relation]}</td>
+                    <td className="py-2 text-mist">{r.elementRelation.replace(/-/g, " ")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        <Card
+          title="Your day & hour pillars (BaZi-lite)"
+          subtitle="Sexagenary day cycle via the Julian Day Number; hour pillar by the Five Rats rule"
+        >
+          <div className="space-y-2 text-sm text-mist">
+            <div className="flex justify-between border-b border-line pb-2">
+              <span>Day pillar</span>
+              <span className="font-semibold text-moon">
+                {data.day.stem}-{data.day.branch} ({data.day.animal}) · cycle #{data.day.cycleNumber} of 60
+              </span>
+            </div>
+            <div className="flex justify-between border-b border-line pb-2">
+              <span>Day elements</span>
+              <span className="font-semibold text-moon">
+                stem {data.day.stemElement} · branch {data.day.branchElement}
+              </span>
+            </div>
+            {data.hour ? (
+              <>
+                <div className="flex justify-between border-b border-line pb-2">
+                  <span>Hour pillar</span>
+                  <span className="font-semibold text-moon">
+                    {data.hour.stem}-{data.hour.branch} ({data.hour.animal})
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Double-hour</span>
+                  <span className="font-semibold text-moon">{data.hour.window}</span>
+                </div>
+                <p className="pt-1 text-xs leading-relaxed text-fog">{data.hour.note}</p>
+              </>
+            ) : (
+              <p className="pt-1 text-sm leading-relaxed text-mist">
+                Hour pillar: <span className="text-moon">not computed</span> — this profile records no
+                birth time, and the hour pillar cannot be derived without one. Add the birth time to
+                the profile and the pillar (stem, branch, and its elements) appears here. The day
+                pillar above needs no time: it is a pure calendar count.
+              </p>
+            )}
+            <p className="pt-1 text-[11px] leading-relaxed text-fog">
+              Method, stated honestly: day pillar from Y.T. Liu&apos;s published JDN formula
+              (verified against 2000-01-01 = Wu-Wu and 2024-02-10 = Jia-Chen). Full Four Pillars
+              (month pillar by solar terms, true solar time) is a deeper module — not claimed here.
+            </p>
+          </div>
         </Card>
       </div>
     </div>

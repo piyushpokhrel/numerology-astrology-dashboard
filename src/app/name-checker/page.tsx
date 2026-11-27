@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useProfile } from "@/components/ProfileProvider";
 import { Badge, Button, Card, Field, Input, PageHeader, Stat } from "@/components/ui";
 import { nameCheckSchema, zodFieldErrors, type FieldErrors } from "@/lib/schemas";
+import { displayNumber } from "@/lib/numerology";
 import type { NameCheckResult, Verdict } from "@/lib/namecheck";
 
 const VERDICT_UI: Record<Verdict, { label: string; dot: string; tone: "jade" | "amber" | "rose"; blurb: string }> = {
@@ -156,10 +157,10 @@ export default function NameCheckerPage() {
               </div>
 
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Stat label="Chaldean root" value={result.chaldean.root} accent sub={`compound ${result.chaldean.compound}`} />
-                <Stat label="Pythagorean root" value={result.pythagorean.root} accent sub={`compound ${result.pythagorean.compound}`} />
-                <Stat label="Founder Life Path" value={result.lifePath} />
-                <Stat label="Founder Destiny" value={result.destiny} />
+                <Stat label="Chaldean root" value={displayNumber(result.chaldean.root)} accent sub={`compound ${result.chaldean.compound}`} />
+                <Stat label="Pythagorean root" value={displayNumber(result.pythagorean.root)} accent sub={`compound ${result.pythagorean.compound}`} />
+                <Stat label="Founder Life Path" value={displayNumber(result.lifePath)} />
+                <Stat label="Founder Destiny" value={displayNumber(result.destiny)} />
               </div>
 
               <h3 className="mt-5 text-sm font-semibold text-moon">Why this score</h3>

@@ -36,6 +36,73 @@ export function numberMeaning(n: number): NumberMeaning {
   return NUMBER_MEANINGS[n] ?? { text: "", source: SOURCE, era: "MODERN" };
 }
 
+/* ------------------------------------------------------------------ */
+/* Both-ways readings (milestone 7 — Piyush's direction)               */
+/*                                                                     */
+/* A master number is ALWAYS explained both ways: the master reading  */
+/* AND the root reading, labelled. The display form ("11/2") comes    */
+/* from displayNumber() in numerology.ts.                             */
+/* ------------------------------------------------------------------ */
+
+import { displayNumber, isMasterNumber, masterRoot } from "./numerology.ts";
+
+export interface BothWaysReading {
+  /** "11/2" for a master number, "4" for an ordinary one. */
+  display: string;
+  isMaster: boolean;
+  /** Labelled reading lines — two for a master (master + root), one otherwise. */
+  lines: string[];
+  source: string;
+  era: "MODERN";
+}
+
+/** The both-ways reading of one number: master way + root way, labelled. */
+export function bothWays(n: number): BothWaysReading {
+  const display = displayNumber(n);
+  if (!isMasterNumber(n)) {
+    return {
+      display,
+      isMaster: false,
+      lines: [`The ${n} reading: ${numberMeaning(n).text}.`],
+      source: SOURCE,
+      era: "MODERN",
+    };
+  }
+  const root = masterRoot(n)!;
+  return {
+    display,
+    isMaster: true,
+    lines: [
+      `The master way — ${n}: ${numberMeaning(n).text}. The master number is read at full voltage: the tradition treats it as the root's theme under pressure and promise, never reduced away.`,
+      `The root way — ${root}: ${numberMeaning(root).text}. Every master number is also lived at its root on ordinary days; the ${root} reading is the ground the ${n} stands on.`,
+    ],
+    source: SOURCE,
+    era: "MODERN",
+  };
+}
+
+/**
+ * An INDIVIDUALISED explanation of one of a person's numbers: the role
+ * it plays, the person's own value (both-ways display), the derivation
+ * with their actual figures, and the reading. Two profiles with
+ * different values or derivations can never produce the same text.
+ */
+export function explainNumber(
+  role: string,
+  value: number,
+  derivation: string,
+): { heading: string; lines: string[]; source: string } {
+  const bw = bothWays(value);
+  return {
+    heading: `${role} — ${bw.display}`,
+    lines: [
+      `How yours is derived: ${derivation}`,
+      ...bw.lines,
+    ],
+    source: bw.source,
+  };
+}
+
 /** Back-compat: just the keyword text. Prefer numberMeaning() in new UI. */
 export function numberKeyword(n: number): string {
   return numberMeaning(n).text;
