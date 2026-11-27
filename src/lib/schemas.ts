@@ -85,11 +85,21 @@ export const birthTimeSchema = z
   .optional()
   .or(z.literal(""));
 
+/**
+ * Birth place is OPTIONAL (locations amendment, Nov 2026): a profile
+ * saves with no place at all. Location-dependent results then run on
+ * the labelled default; location-free results are exact regardless.
+ * When given, it is free text (any place on Earth) — coordinates are
+ * set separately in the chart settings, where manual lat/lon entry
+ * always exists.
+ */
 export const birthPlaceSchema = z
-  .string({ error: "Birth place is required." })
+  .string()
   .trim()
-  .min(2, "Birth place must be at least 2 characters.")
-  .max(120, "Birth place must be at most 120 characters.");
+  .max(120, "Birth place must be at most 120 characters.")
+  .refine((v) => v.length === 0 || v.length >= 2, "Birth place must be at least 2 characters when given.")
+  .optional()
+  .or(z.literal(""));
 
 export const profileSchema = z.object({
   fullName: fullNameSchema,

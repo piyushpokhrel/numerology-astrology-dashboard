@@ -31,6 +31,7 @@ export interface CityPreset {
 
 export const CITY_PRESETS: readonly CityPreset[] = [
   { id: "toronto", label: "Toronto, Canada", latitude: 43.65, longitudeEast: -79.38, utcOffset: -5 },
+  { id: "ghorahi", label: "Ghorahi, Dang, Nepal", latitude: 28.0483, longitudeEast: 82.4866, utcOffset: 5.75 },
   { id: "kathmandu", label: "Kathmandu, Nepal", latitude: 27.71, longitudeEast: 85.32, utcOffset: 5.75 },
   { id: "delhi", label: "New Delhi, India", latitude: 28.61, longitudeEast: 77.21, utcOffset: 5.5 },
   { id: "newyork", label: "New York, USA", latitude: 40.71, longitudeEast: -74.01, utcOffset: -5 },
@@ -200,6 +201,19 @@ export function ChartWorkbench({
             Edit profile before reading those.
           </p>
         )}
+        {settings.cityId === "toronto" &&
+          settings.latitude === DEFAULT_SETTINGS.latitude &&
+          settings.longitudeEast === DEFAULT_SETTINGS.longitudeEast && (
+            <p className="mt-3 rounded-lg border border-amber/40 bg-amber/10 px-3 py-2 text-xs leading-relaxed text-amber">
+              Location is the labelled default (Toronto) — place-dependent
+              results (Ascendant, houses, sunrise timings) are approximate
+              until you pick the real birth place or type its coordinates.
+              Any place on Earth works: presets are quick picks, and the
+              latitude/longitude fields accept anywhere. Location-free
+              results (numerology, Chinese sign, name checker) are exact
+              regardless.
+            </p>
+          )}
         {input && (
           <p className="mt-3 text-xs text-fog">
             Chart instant (UTC): <span className="text-mist">{input.utc.toISOString()}</span> —

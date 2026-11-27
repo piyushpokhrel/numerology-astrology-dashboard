@@ -38,7 +38,7 @@ export function ProfileForm({ redirectTo = "/report" }: { redirectTo?: string })
     setFullName(profile.fullName);
     setDob(profile.dob);
     setBirthTime(profile.birthTime ?? "");
-    setBirthPlace(profile.birthPlace);
+    setBirthPlace(profile.birthPlace ?? "");
   }
 
   async function onSubmit(e: FormEvent) {
@@ -124,9 +124,9 @@ export function ProfileForm({ redirectTo = "/report" }: { redirectTo?: string })
       </div>
 
       <Field
-        label="Birth place"
+        label="Birth place (optional)"
         error={errors.birthPlace}
-        hint="City and country — used by the Western and Vedic charts."
+        hint="Any city or town on Earth — used by the Western and Vedic charts. Leave blank and place-dependent results use a labelled default; numerology, Chinese and name results are exact without it."
       >
         <Input
           value={birthPlace}
