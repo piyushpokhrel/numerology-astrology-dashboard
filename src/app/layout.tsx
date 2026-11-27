@@ -15,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AstroNumerology — One Dashboard, Four Systems",
+  title: "AstroNumerology — Exact Calculations, Four Traditions",
   description:
-    "Chaldean + Pythagorean numerology, Western, Vedic and Chinese astrology in one dashboard. Exact calculations, classical interpretations.",
+    "Chaldean and Pythagorean numerology, Western and Vedic astrology, and Chinese astrology — calculated exactly from one verified birth profile, with every step of the mathematics shown and every interpretation sourced.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

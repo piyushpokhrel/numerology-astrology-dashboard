@@ -93,7 +93,7 @@ export default function NumerologyPage() {
     <div>
       <PageHeader
         title="Numerology report"
-        blurb={`${profile.fullName} · born ${profile.dob}. Both systems, computed from the same engines the dashboard uses.`}
+        blurb={`${profile.fullName} · born ${profile.dob}. Both systems, computed in full — every figure below shows the arithmetic that produced it.`}
         action={
           <div className="flex gap-2">
             <Badge tone="gold">Chaldean · Cheiro 1926</Badge>

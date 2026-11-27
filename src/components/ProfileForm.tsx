@@ -19,7 +19,7 @@ import { profileSchema, zodFieldErrors, type FieldErrors, type ProfileInput } fr
 import { useProfile } from "./ProfileProvider";
 import { Button, Field, Input } from "./ui";
 
-export function ProfileForm({ redirectTo = "/dashboard" }: { redirectTo?: string }) {
+export function ProfileForm({ redirectTo = "/report" }: { redirectTo?: string }) {
   const { profile, applyProfile, removeProfile } = useProfile();
   const router = useRouter();
 
@@ -72,7 +72,7 @@ export function ProfileForm({ redirectTo = "/dashboard" }: { redirectTo?: string
       setSavedNote(
         profile
           ? `Profile updated — every page now reflects the change. Last updated ${stamped.updatedAt}.`
-          : "Profile created — your dashboard is ready.",
+          : "Profile created — your full report is ready.",
       );
       router.push(redirectTo);
     } catch {

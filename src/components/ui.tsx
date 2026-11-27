@@ -1,5 +1,5 @@
 /**
- * Small hand-built component set for the dashboard — Button, Card,
+ * Small hand-built component set for the application — Button, Card,
  * Input/Field, Stat, Tabs, Badge. Tailwind v4 utilities on the theme
  * tokens defined in globals.css. No component library.
  */

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ButtonLink, Card } from "@/components/ui";
+import { HomeCycles } from "@/components/HomeCycles";
 
 const SYSTEMS: ReadonlyArray<{
   href: string;
@@ -13,8 +14,8 @@ const SYSTEMS: ReadonlyArray<{
     icon: "№",
     title: "Numerology",
     blurb:
-      "Chaldean and Pythagorean engines side by side — life path, destiny, soul urge, compound numbers and personal cycles, all test-locked.",
-    status: "Live in this prototype",
+      "Chaldean and Pythagorean engines side by side — life path, destiny, soul urge, compound numbers and personal cycles, each figure shown with its arithmetic.",
+    status: "Live",
   },
   {
     href: "/chinese",
@@ -22,15 +23,15 @@ const SYSTEMS: ReadonlyArray<{
     title: "Chinese Astrology",
     blurb:
       "Your animal and element resolved against the real Lunar New Year boundary, with secret-friend, clash and trine relations and year outlooks.",
-    status: "Live in this prototype",
+    status: "Live",
   },
   {
     href: "/western",
     icon: "☉",
     title: "Western Astrology",
     blurb:
-      "Tropical chart on the astronomy-engine ephemeris — planets, houses, aspects and transits, cross-checked against published charts.",
-    status: "Building next",
+      "Tropical chart on a published ephemeris — planets, houses and aspects, cross-checked against published charts to within 0.013°.",
+    status: "Live",
   },
   {
     href: "/vedic",
@@ -38,7 +39,7 @@ const SYSTEMS: ReadonlyArray<{
     title: "Vedic Astrology",
     blurb:
       "Sidereal chart with Lahiri ayanamsa, Moon nakshatra and the Vimshottari dasha timeline from the classical Parashari system.",
-    status: "Building next",
+    status: "Live",
   },
 ];
 
@@ -59,16 +60,17 @@ export default function Home() {
           Chaldean · Pythagorean · Western · Vedic · Chinese
         </p>
         <h1 className="mt-4 max-w-2xl text-4xl font-bold leading-tight tracking-tight text-moon sm:text-5xl">
-          Every system you trust,
+          Exact calculations from four traditions —
           <br />
           <span className="bg-gradient-to-r from-gold-2 via-gold to-violet bg-clip-text text-transparent">
-            one exact dashboard.
+            one verified profile.
           </span>
         </h1>
         <p className="mt-4 max-w-xl text-base leading-relaxed text-mist">
-          Enter your name and birth details once. The engines do the rest —
-          verifiable calculations first, classical interpretation second,
-          clearly labelled as tradition.
+          Chaldean and Pythagorean numerology, Western and Vedic astrology,
+          and Chinese astrology, computed precisely from a single birth
+          profile. Every result shows its mathematics. Every interpretation
+          names its source.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <ButtonLink href="/profile" className="px-6 py-3 text-base">
@@ -80,21 +82,18 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Personal cycles for the active profile (if one exists) */}
+      <HomeCycles />
+
       {/* The four systems */}
-      <h2 className="mb-4 mt-10 text-lg font-semibold text-moon">The systems</h2>
+      <h2 className="mb-4 mt-10 text-lg font-semibold text-moon">The four traditions</h2>
       <div className="grid gap-4 sm:grid-cols-2">
         {SYSTEMS.map((s) => (
           <Link key={s.href} href={s.href} className="group block">
             <Card className="h-full transition-colors group-hover:border-gold/50">
               <div className="flex items-start justify-between">
                 <span className="text-3xl text-gold">{s.icon}</span>
-                <span
-                  className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                    s.status.startsWith("Live")
-                      ? "border-jade/40 bg-jade/10 text-jade"
-                      : "border-line bg-panel-2 text-mist"
-                  }`}
-                >
+                <span className="rounded-full border border-jade/40 bg-jade/10 px-2.5 py-0.5 text-xs font-medium text-jade">
                   {s.status}
                 </span>
               </div>
@@ -105,23 +104,113 @@ export default function Home() {
         ))}
       </div>
 
+      {/* Campaign — what the service offers, and to whom */}
+      <h2 className="mb-4 mt-12 text-lg font-semibold text-moon">What this service does</h2>
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[
+          {
+            t: "For individuals",
+            h: "Your numbers, checked properly",
+            d: "A complete personal profile — life path, destiny, personal cycles and charts in four traditions — calculated exactly and explained step by step, so you can verify every figure yourself.",
+          },
+          {
+            t: "For founders",
+            h: "Business names, checked before you commit",
+            d: "The name checker scores a business or personal name against the founder's birth numbers in both numerology systems, using a documented, deterministic method with the full reasoning shown.",
+          },
+          {
+            t: "For practitioners",
+            h: "Client reports you can stand behind",
+            d: "One verified profile produces a consistent, reproducible report across all four traditions — the same inputs always give the same results, ready to print or save as PDF.",
+          },
+        ].map((c) => (
+          <Card key={c.t}>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
+              {c.t}
+            </div>
+            <h3 className="mt-2 font-semibold text-moon">{c.h}</h3>
+            <p className="mt-1 text-sm leading-relaxed text-mist">{c.d}</p>
+          </Card>
+        ))}
+      </div>
+
+      {/* Pricing — the free core and the one paid product */}
+      <h2 className="mb-4 mt-12 text-lg font-semibold text-moon">Pricing, plainly</h2>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Card>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-jade">
+            Free — forever
+          </div>
+          <h3 className="mt-2 font-semibold text-moon">The complete core, at no cost</h3>
+          <p className="mt-1 text-sm leading-relaxed text-mist">
+            Every calculator, every chart, the name checker and the standard
+            report are free — no account, no trial clock, no feature held
+            back. That is a permanent part of how this service works, not an
+            introductory offer.
+          </p>
+        </Card>
+        <Link href="/red-book" className="group block">
+          <Card className="h-full border-[#6e1420] bg-[#20070c] transition-colors group-hover:border-[#8a6a2f]">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c9a86a]">
+              The one paid product
+            </div>
+            <h3 className="mt-2 font-serif text-lg font-bold text-[#f3e2ac]">
+              The Red Book — CAD $19, once
+            </h3>
+            <p className="mt-1 text-sm leading-relaxed text-[#e9d9c8]">
+              The full deep reading: six chapters across the four traditions,
+              with the compounds, the dasha sub-periods and the combined
+              synthesis. One payment per profile — no subscription, no tiers.
+              Cover, contents and the first chapter are free to read.
+            </p>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Motive */}
+      <section className="mt-12 rounded-3xl border border-line bg-panel-2/40 px-6 py-10 sm:px-10">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gold">
+          Our motive
+        </p>
+        <h2 className="mt-3 max-w-2xl text-2xl font-bold leading-snug tracking-tight text-moon">
+          Authentic knowledge, computed exactly and shown openly.
+        </h2>
+        <div className="mt-4 max-w-3xl space-y-3 text-sm leading-relaxed text-mist sm:text-base">
+          <p>
+            Much of this industry sells certainty it cannot show: readings
+            written vaguely enough to fit anyone, fear used to sell remedies,
+            and subscriptions designed to be difficult to leave. We built the
+            opposite.
+          </p>
+          <p>
+            The classical traditions — Parashara&apos;s Jyotisha, Cheiro&apos;s
+            Chaldean numbers, the Chinese calendar masters — worked in exact
+            numbers and named methods. This service holds to that standard:
+            calculations you can reproduce, sources you can check, and honest
+            labels wherever a method is modern rather than classical. If a
+            figure here cannot be traced to its calculation and its source,
+            it does not belong here.
+          </p>
+        </div>
+      </section>
+
       {/* How it works */}
       <div className="mt-10 grid gap-4 sm:grid-cols-3">
         {[
           {
             n: "1",
-            t: "Post your credentials once",
-            d: "Name, date of birth, time and place — validated field by field before anything is stored.",
+            t: "Enter your birth details once",
+            d: "Name, date of birth, time and place — validated field by field before anything is stored, and kept only in your browser.",
           },
           {
             n: "2",
-            t: "Engines calculate exactly",
-            d: "Pure, test-locked mathematics. Your cycles are recomputed against today every time you look — never stale.",
+            t: "Calculations run exactly",
+            d: "Test-locked engines compute every number and chart position. Your cycles are recomputed against today every time you look — never stale.",
           },
           {
             n: "3",
-            t: "Read tradition, labelled",
-            d: "Interpretations come from the classical texts and are marked as tradition — never sold as certainty.",
+            t: "Interpretation, with its source",
+            d: "Readings follow the classical texts and cite them. Modern methods are labelled modern. Tradition is presented as tradition — never sold as certainty.",
           },
         ].map((step) => (
           <Card key={step.n}>

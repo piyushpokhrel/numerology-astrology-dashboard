@@ -7,7 +7,7 @@
  *   - The profile is loaded from localStorage once on mount.
  *   - `today` is captured from the client's clock at mount (so pages can
  *     be prerendered without reading the time on the server) and can be
- *     re-captured at any moment via `refresh()` — the dashboard's
+ *     re-captured at any moment via `refresh()` — the landing page's
  *     Refresh button — which also bumps `refreshCount` so views can
  *     show when the last recomputation happened.
  *   - `applyProfile()` stamps createdAt/updatedAt and persists; every

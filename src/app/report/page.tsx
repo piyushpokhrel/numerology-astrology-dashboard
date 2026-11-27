@@ -101,6 +101,28 @@ function ReportDocument({
         </p>
       </header>
 
+      {/* At a glance — the chart highlights, up front */}
+      <h2 className={h2}>At a glance</h2>
+      <div className="mt-3 grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">
+        {[
+          ["Ascendant (Western)", formatInSign(western.ascendant)],
+          ["Moon nakshatra (Vedic)", `${vedic.moonNakshatra.name} · pada ${vedic.moonNakshatra.pada}`],
+          [
+            "Current dasha (Vedic)",
+            currentDasha ? `${currentDasha.lord} Mahadasha` : "—",
+          ],
+        ].map(([label, value]) => (
+          <div key={label} className="flex justify-between border-b border-neutral-200 py-1">
+            <span className="text-neutral-600">{label}</span>
+            <span className="font-semibold">{value}</span>
+          </div>
+        ))}
+      </div>
+      <p className={src}>
+        Derived from the same chart settings as sections 3 and 4 below — one
+        derivation, shown in full there.
+      </p>
+
       {/* Numerology */}
       <h2 className={h2}>1 · Numerology — Chaldean & Pythagorean</h2>
       <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-1 text-sm sm:grid-cols-3">

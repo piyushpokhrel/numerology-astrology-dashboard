@@ -70,8 +70,8 @@ export function loadChartSettings(): ChartSettings {
 
 /**
  * Derive the engine input from a profile + settings. Returns null when
- * the settings are not valid numbers. Used by the workbench form, the
- * dashboard summary and the unified report — one derivation, everywhere.
+ * the settings are not valid numbers. Used by the workbench form and
+ * the unified report — one derivation, everywhere.
  */
 export function chartInputFor(
   profile: { dob: string; birthTime?: string },

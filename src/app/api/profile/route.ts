@@ -3,8 +3,8 @@
  * credentials. The client form validates with the same zod schema for
  * instant inline errors, then posts here; this handler re-validates
  * (client checks are UX, never the boundary) and echoes the normalised
- * profile back. Persistence itself is client-side (localStorage) in
- * this prototype — no credential is stored on the server.
+ * profile back. Persistence itself is client-side (localStorage) —
+ * no credential is stored on the server.
  *
  * Responses:
  *   200 { ok: true, profile }

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Dashboard chrome: left sidebar (primary nav), top bar (profile chip +
+ * Application chrome: left sidebar (primary nav), top bar (profile chip +
  * last-updated stamp), mobile nav row. Wraps every page.
  */
 
@@ -12,13 +12,14 @@ import { useProfile } from "./ProfileProvider";
 import { formatDateTime } from "@/lib/profile";
 
 const NAV: ReadonlyArray<{ href: string; label: string; icon: string }> = [
-  { href: "/dashboard", label: "Dashboard", icon: "◈" },
+  { href: "/", label: "Home", icon: "✦" },
   { href: "/numerology", label: "Numerology", icon: "№" },
   { href: "/name-checker", label: "Name Checker", icon: "✓" },
   { href: "/chinese", label: "Chinese", icon: "龍" },
   { href: "/western", label: "Western", icon: "☉" },
   { href: "/vedic", label: "Vedic", icon: "ॐ" },
   { href: "/report", label: "Full Report", icon: "▤" },
+  { href: "/red-book", label: "The Red Book", icon: "❦" },
 ];
 
 function NavLinks({ vertical }: { vertical?: boolean }) {
@@ -60,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             Astro<span className="text-gold">Numerology</span>
           </div>
           <div className="text-[11px] uppercase tracking-[0.18em] text-fog">
-            One dashboard · four systems
+            Four traditions · one verified profile
           </div>
         </Link>
         <div className="mt-6">
@@ -118,8 +119,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
 
         <footer className="border-t border-line py-5 text-center text-xs text-fog print:hidden">
-          Prototype — for reflection and entertainment. Not medical, financial
-          or legal advice.
+          AstroNumerology — calculations are exact and reproducible.
+          Interpretations are traditional indications, provided for reflection
+          and entertainment. Not medical, financial or legal advice.
         </footer>
       </div>
     </div>
