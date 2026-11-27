@@ -12,7 +12,12 @@ import { NextResponse } from "next/server";
 import { accountsConfigured, resolvePremium } from "@/lib/accounts";
 
 export async function GET(req: Request) {
-  if (!accountsConfigured(process.env)) {
+  if (
+    !accountsConfigured({
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    })
+  ) {
     return NextResponse.json({ role: "guest", premium: false, accountsAvailable: false });
   }
   const header = req.headers.get("authorization") ?? "";

@@ -41,17 +41,15 @@ export default function AdminPage() {
   }
 
   async function runEntitlementTest() {
-    const res = await fetch("/api/account/premium", {
-      headers: (() => {
-        try {
-          const raw = window.localStorage.getItem("astro-numerology:supabase-session:v1");
-          const token = raw ? (JSON.parse(raw) as { accessToken?: string }).accessToken : null;
-          return token ? { Authorization: "Bearer " + token } : {};
-        } catch {
-          return {};
-        }
-      })(),
-    });
+    const headers: Record<string, string> = {};
+    try {
+      const raw = window.localStorage.getItem("astro-numerology:supabase-session:v1");
+      const token = raw ? (JSON.parse(raw) as { accessToken?: string }).accessToken : null;
+      if (token) headers.Authorization = "Bearer " + token;
+    } catch {
+      /* no session — the server will answer guest */
+    }
+    const res = await fetch("/api/account/premium", { headers });
     const data = (await res.json()) as PremiumState & { email?: string };
     setTestResult(
       `Server verdict — role: ${data.role}, premium: ${data.premium ? "YES" : "no"}${data.email ? `, verified email: ${data.email}` : ""}. This answer came from the server after verifying the session token; no client flag was trusted.`,
