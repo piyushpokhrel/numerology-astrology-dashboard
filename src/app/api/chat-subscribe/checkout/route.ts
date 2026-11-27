@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
     method: "POST",
     headers: {
-Authorization: <redacted>
+      Authorization: "Bearer " + (process.env.STRIPE_SECRET_KEY ?? ""),
       "Content-Type": "application/x-www-form-urlencoded",
     },
     body: form.toString(),
