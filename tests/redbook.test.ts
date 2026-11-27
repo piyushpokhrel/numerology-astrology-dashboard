@@ -48,9 +48,9 @@ test("REDBOOK determinism — same inputs, identical book", () => {
   assert.deepEqual(a, b);
 });
 
-test("REDBOOK structure — seven chapters, only Chapter 1 free", () => {
+test("REDBOOK structure — eight chapters, only Chapter 1 free", () => {
   const book = buildRedBook(PROFILE, INPUT, ON_DATE);
-  assert.equal(book.chapters.length, 7);
+  assert.equal(book.chapters.length, 8);
   assert.deepEqual(
     book.chapters.map((c) => c.title),
     [
@@ -61,6 +61,7 @@ test("REDBOOK structure — seven chapters, only Chapter 1 free", () => {
       "Karma and Life Themes",
       "Where All Systems Agree",
       "Past Life Karma and the True Purpose of This Lifetime",
+      "Ishta Devta and the Resonating Beings",
     ],
   );
   assert.equal(book.chapters[0].free, true);

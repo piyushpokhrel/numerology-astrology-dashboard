@@ -58,6 +58,7 @@ import {
   type WesternChart,
 } from "./western.ts";
 import { karmaReport } from "./karma.ts";
+import { ISHTA_EXPLANATION, RESONANCE, RESONANCE_FRAMING, jaimini } from "./jaimini.ts";
 
 /** Back-compat: the Antardasha engine now lives in vedic.ts (milestone 7). */
 export { antardashas } from "./vedic.ts";
@@ -732,6 +733,51 @@ function karmaPurposeChapter(
   };
 }
 
+function ishtaChapter(core: CoreProfile, vedic: VedicChart): RedBookChapter {
+  const j = jaimini(vedic);
+  const resonance = RESONANCE[j.ishtaPlanet] ?? [];
+  void core;
+  return {
+    id: "ishta-devta",
+    number: 8,
+    title: "Ishta Devta and the Resonating Beings",
+    subtitle: "The Jaimini karakas, your soul's sign, the deity form your chart points to — and its archetype parallels across the old civilizations",
+    free: false,
+    source: "Jaimini/BPHS karaka + Ishta Devta doctrine (classical, 7-karaka scheme) · deity forms per the standard published mapping (TRADITIONAL) · resonance table: COMPARATIVE MYTHOLOGY, modern compilation.",
+    sections: [
+      { heading: "What Ishta Devta means", lines: ISHTA_EXPLANATION },
+      {
+        heading: "Your Chara Karakas — the derivation, degree by degree",
+        lines: [
+          "The seven grahas ranked by degree-in-sign (7-karaka scheme; Rahu excluded, as the scheme states):",
+          ...j.karakas.map(
+            (k) => `${k.name} (${k.short}) — ${k.body} at ${k.degreeInSign.toFixed(2)}° in its sign: ${k.signifies}.`,
+          ),
+          `Your Atmakaraka is ${j.atmakaraka.body} — the graha of ${j.atmakaraka.signifies}. Your Amatyakaraka, the supporting guide karaka, is ${j.amatyakaraka.body} — ${j.amatyakaraka.signifies}.`,
+        ],
+      },
+      {
+        heading: `Karakamsa ${j.karakamsa} → Ishta Devta: ${j.ishtaDeity} (${j.ishtaPlanet})`,
+        lines: [
+          `${j.atmakaraka.body} (Atmakaraka) sits in navamsa ${j.karakamsa} — that sign is your Karakamsa, the soul's seat in the D9.`,
+          j.ishtaRule,
+          `The tradition's deity form for ${j.ishtaPlanet} is ${j.ishtaDeity}. This is reported as the tradition's pointer for spiritual practice — educational, respectful, and with no instruction and no promise attached.`,
+          `Your navamsa placements, for the full derivation: ${j.navamsa.map((n) => `${n.body}: ${n.rashiSign} → D9 ${n.navamsaSign}`).join("; ")}. Lagna → D9 ${j.lagnaNavamsa}.`,
+        ],
+      },
+      {
+        heading: `Resonating beings — the ${j.ishtaPlanet} principle across old civilizations`,
+        lines: [
+          RESONANCE_FRAMING,
+          ...resonance.map(
+            (r) => `${r.civilization}: ${r.being ?? "no direct parallel"} — ${r.note}.`,
+          ),
+        ],
+      },
+    ],
+  };
+}
+
 export function buildRedBook(
   profile: Profile,
   chartInput: ChartInput,
@@ -755,6 +801,7 @@ export function buildRedBook(
       karmaChapter(core, vedic, western),
       synthesisChapter(core, chinese, western, vedic, onDate),
       karmaPurposeChapter(core, western, vedic),
+      ishtaChapter(core, vedic),
     ],
   };
 }
