@@ -136,32 +136,44 @@ export default function Home() {
 
       {/* Pricing — the free core and the one paid product */}
       <h2 className="mb-4 mt-12 text-lg font-semibold text-moon">Pricing, plainly</h2>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
         <Card>
           <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-jade">
             Free — forever
           </div>
-          <h3 className="mt-2 font-semibold text-moon">The complete core, at no cost</h3>
+          <h3 className="mt-2 font-semibold text-moon">Everything that calculates</h3>
           <p className="mt-1 text-sm leading-relaxed text-mist">
-            Every calculator, every chart, the name checker and the standard
-            report are free — no account, no trial clock, no feature held
-            back. That is a permanent part of how this service works, not an
-            introductory offer.
+            All calculators, charts, the name checker, Panchanga and the
+            standard report — free forever. No account, no trial clock, no
+            feature held back. That is permanent, not an introductory offer.
+          </p>
+        </Card>
+        <Card>
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
+            AI chat — 7 free replies a month
+          </div>
+          <h3 className="mt-2 font-semibold text-moon">Unlimited with the $15/month subscription</h3>
+          <p className="mt-1 text-sm leading-relaxed text-mist">
+            The side chat answers from the same engines — 7 free replies
+            every month, no card needed. Unlimited chat is $15/month: cancel
+            anytime in one click, billed under the real business name. No
+            countdowns, no fake discounts, no teaser prices.
           </p>
         </Card>
         <Link href="/red-book" className="group block">
           <Card className="h-full border-[#6e1420] bg-[#20070c] transition-colors group-hover:border-[#8a6a2f]">
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#c9a86a]">
-              The one paid product
+              One-time
             </div>
             <h3 className="mt-2 font-serif text-lg font-bold text-[#f3e2ac]">
-              The Red Book — CAD $19, once
+              The Red Book — $19, once
             </h3>
             <p className="mt-1 text-sm leading-relaxed text-[#e9d9c8]">
-              The full deep reading: six chapters across the four traditions,
-              with the compounds, the dasha sub-periods and the combined
-              synthesis. One payment per profile — no subscription, no tiers.
-              Cover, contents and the first chapter are free to read.
+              The full deep reading for one profile: eight chapters across
+              the four traditions, with the compounds, the dasha sub-periods,
+              karma and purpose, and the combined synthesis. One payment per
+              profile — no subscription, no tiers. The first chapter is free
+              to read, and refunds go to the original payment method.
             </p>
           </Card>
         </Link>

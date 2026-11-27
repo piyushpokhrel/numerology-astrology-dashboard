@@ -9,6 +9,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useProfile } from "./ProfileProvider";
+import { ChatDrawer } from "./ChatDrawer";
 import { formatDateTime } from "@/lib/profile";
 
 const NAV: ReadonlyArray<{ href: string; label: string; icon: string }> = [
@@ -126,8 +127,12 @@ export function AppShell({ children }: { children: ReactNode }) {
         <footer className="border-t border-line py-5 text-center text-xs text-fog print:hidden">
           AstroNumerology — calculations are exact and reproducible.
           Interpretations are traditional indications, provided for reflection
-          and entertainment. Not medical, financial or legal advice.
+          and entertainment. Not medical, financial or legal advice.{" "}
+          <Link href="/admin" className="underline decoration-dotted underline-offset-2 hover:text-mist">
+            Owner
+          </Link>
         </footer>
+        <ChatDrawer />
       </div>
     </div>
   );
