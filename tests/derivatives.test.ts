@@ -185,10 +185,11 @@ test("FIVE-YEAR RELATIONS: golden Horse profile from 2026 — Goat 2027 is the s
 /* ---------------- Individuality + determinism (Red Book) ---------------- */
 
 const GOLDEN: Profile = {
+  // Owner's true birth data (given 2026-11-27): 09:50 NPT, Ghorahi, Nepal.
   fullName: "Piyush Pokhrel",
   dob: "2003-01-07",
-  birthTime: "12:00",
-  birthPlace: "Toronto, Canada",
+  birthTime: "09:50",
+  birthPlace: "Ghorahi, Dang, Nepal",
   createdAt: "2026-11-26T00:00:00.000Z",
   updatedAt: "2026-11-26T00:00:00.000Z",
 };
@@ -202,9 +203,10 @@ const OTHER: Profile = {
 };
 
 const CHART_INPUT = {
-  utc: new Date("2003-01-07T17:00:00Z"),
-  latitude: 43.65,
-  longitudeEast: -79.38,
+  // 2003-01-07 09:50 Asia/Kathmandu (UTC+5:45) = 04:05 UTC, Ghorahi.
+  utc: new Date("2003-01-07T04:05:00Z"),
+  latitude: 28.0483,
+  longitudeEast: 82.4866,
 };
 const CHART_INPUT_OTHER = {
   utc: new Date("1990-05-15T16:00:00Z"),

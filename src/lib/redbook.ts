@@ -57,6 +57,7 @@ import {
   type ChartInput,
   type WesternChart,
 } from "./western.ts";
+import { karmaReport } from "./karma.ts";
 
 /** Back-compat: the Antardasha engine now lives in vedic.ts (milestone 7). */
 export { antardashas } from "./vedic.ts";
@@ -710,6 +711,27 @@ function synthesisChapter(
  * Build the complete Red Book for a profile. Pure and deterministic:
  * identical (profile, chartInput, onDate) → identical book.
  */
+function karmaPurposeChapter(
+  core: CoreProfile,
+  western: WesternChart,
+  vedic: VedicChart,
+): RedBookChapter {
+  const report = karmaReport(core, western, vedic);
+  return {
+    id: "karma-purpose",
+    number: 7,
+    title: "Past Life Karma and the True Purpose of This Lifetime",
+    subtitle: "The node axis, Saturn, the 12th house and the debt compounds — indicators, computed and explained, never invented stories",
+    free: false,
+    source: "BPHS node/Saturn doctrine (classical) · Western karmic astrology (modern tradition) · Cheiro (1926) · mean nodes per Meeus.",
+    sections: [
+      { heading: "The framework — read this first", lines: report.framework },
+      ...report.indicators.map((i) => ({ heading: i.title, lines: i.lines })),
+      { heading: "The True Purpose of this lifetime — assembled only from the indicators above", lines: report.purpose },
+    ],
+  };
+}
+
 export function buildRedBook(
   profile: Profile,
   chartInput: ChartInput,
@@ -732,6 +754,7 @@ export function buildRedBook(
       vedicChapter(vedic, onDate),
       karmaChapter(core, vedic, western),
       synthesisChapter(core, chinese, western, vedic, onDate),
+      karmaPurposeChapter(core, western, vedic),
     ],
   };
 }

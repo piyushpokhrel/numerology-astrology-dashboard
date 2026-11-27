@@ -165,9 +165,9 @@ function VedicResults({ input, today }: { input: ChartInput; today: string }) {
         </div>
         <p className="mt-3 text-xs leading-relaxed text-fog">
           Uranus, Neptune and Pluto are not classical grahas and are excluded
-          from the Rashi table in this build. Rahu/Ketu longitudes are not
-          computed yet — astronomy-engine has no lunar-node ephemeris, and we
-          do not invent positions. (The dasha below needs only the Moon.)
+          from the Rashi table in this build. Rahu/Ketu are computed as MEAN
+          nodes (Meeus formula — see the Karma & Purpose page); the true node
+          needs a full ephemeris and is labelled an upgrade, never faked.
         </p>
       </Card>
 

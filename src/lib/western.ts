@@ -293,6 +293,48 @@ export function tightestAspect(chart: WesternChart): Aspect | null {
   return chart.aspects.length ? chart.aspects[0] : null;
 }
 
+/* ------------------------------------------------------------------ */
+/* Mean lunar nodes (milestone 8) — Meeus, Astronomical Algorithms:    */
+/* Ω = 125.04452 − 1934.136261·T + 0.0020608·T² + T³/450000, T in      */
+/* Julian centuries from J2000.0. This is the MEAN node (the smoothed */
+/* orbit); the TRUE node oscillates around it by up to ~1.5° and      */
+/* needs a full ephemeris — the label "mean" is carried everywhere.   */
+/* Golden checks: 2000-01-01 12:00 UTC → 125.04°; 2025-01-01 → 1.51°.  */
+/* ------------------------------------------------------------------ */
+
+export function meanNodeLongitude(when: Date): number {
+  const t = (when.getTime() / 86400000 + 2440587.5 - 2451545.0) / 36525; // Julian centuries from J2000
+  const omega =
+    125.04452 - 1934.136261 * t + 0.0020608 * t * t + (t * t * t) / 450000;
+  return norm360(omega);
+}
+
+export interface NodeAxis {
+  /** Mean North Node (Rahu) tropical longitude. */
+  rahu: number;
+  /** Mean South Node (Ketu) tropical longitude — always Rahu + 180°. */
+  ketu: number;
+  rahuSign: ZodiacSign;
+  ketuSign: ZodiacSign;
+  rahuHouse: number;
+  ketuHouse: number;
+  kind: "mean";
+}
+
+export function nodeAxis(chart: WesternChart): NodeAxis {
+  const rahu = meanNodeLongitude(new Date(chart.utcISO));
+  const ketu = norm360(rahu + 180);
+  return {
+    rahu,
+    ketu,
+    rahuSign: signOf(rahu),
+    ketuSign: signOf(ketu),
+    rahuHouse: wholeSignHouse(rahu, chart.ascendant),
+    ketuHouse: wholeSignHouse(ketu, chart.ascendant),
+    kind: "mean",
+  };
+}
+
 export function westernChart(input: ChartInput): WesternChart {
   const { utc, latitude, longitudeEast } = input;
   const lst = localSiderealDegrees(utc, longitudeEast);

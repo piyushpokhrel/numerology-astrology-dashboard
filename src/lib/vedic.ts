@@ -38,6 +38,7 @@ import {
   tropicalLongitude,
   ascendantFromLst,
   localSiderealDegrees,
+  meanNodeLongitude,
   type ChartInput,
   type PlanetName,
   type ZodiacSign,
@@ -311,7 +312,7 @@ export function nakshatraLordChain(chart: VedicChart): string[] {
     );
   } else {
     lines.push(
-      `Chain link 2 — stated honestly: ${nak.lord} is a node (chaya graha). This build computes no Rahu/Ketu longitudes (astronomy-engine has no node ephemeris), so the chain cannot follow ${nak.lord} to a sign. What is exact is the timing consequence above: the ${nak.lord} period opens your dasha sequence.`,
+      `Chain link 2 — where the lord stands: ${nak.lord} is a node (chaya graha); this build computes MEAN node longitudes (Meeus), so the chain can be followed: mean ${nak.lord} stands in ${nak.lord === "Rahu" ? chart.nodes.rahuSign : chart.nodes.ketuSign} sidereal, house ${nak.lord === "Rahu" ? chart.nodes.rahuHouse : chart.nodes.ketuHouse} from your Lagna. The timing consequence above remains the exact part: the ${nak.lord} period opens your dasha sequence.`,
     );
   }
   return lines;
@@ -353,6 +354,18 @@ const CLASSICAL_GRAHAS: ReadonlyArray<{ graha: string; body: PlanetName }> = [
 
 const OUTER_BODIES: readonly PlanetName[] = ["Uranus", "Neptune", "Pluto"];
 
+export interface VedicNodes {
+  /** Mean Rahu/Ketu — sidereal longitudes (Meeus mean node − Lahiri ayanamsa). */
+  rahuSidereal: number;
+  ketuSidereal: number;
+  rahuSign: ZodiacSign;
+  ketuSign: ZodiacSign;
+  /** Whole-sign house counted from the Lagna sign. */
+  rahuHouse: number;
+  ketuHouse: number;
+  kind: "mean";
+}
+
 export interface VedicChart {
   utcISO: string;
   ayanamsa: number;
@@ -360,6 +373,8 @@ export interface VedicChart {
   grahas: GrahaPosition[];
   /** Uranus/Neptune/Pluto — modern additions, NOT classical grahas. */
   outerPlanets: GrahaPosition[];
+  /** Mean lunar nodes (milestone 8 — Meeus formula; labelled MEAN everywhere). */
+  nodes: VedicNodes;
   moonNakshatra: NakshatraInfo;
   dashas: DashaPeriod[];
   method: string;
@@ -392,6 +407,12 @@ export function vedicChart(input: ChartInput): VedicChart {
   const tropicalAsc = ascendantFromLst(lst, latitude);
   const siderealAsc = norm360(tropicalAsc - ayanamsa);
 
+  const rahuSidereal = norm360(meanNodeLongitude(utc) - ayanamsa);
+  const ketuSidereal = norm360(rahuSidereal + 180);
+  const lagnaSignIdx = Math.floor(siderealAsc / 30);
+  const houseFromLagna = (lon: number) =>
+    ((Math.floor(norm360(lon) / 30) - lagnaSignIdx + 12) % 12) + 1;
+
   return {
     utcISO: utc.toISOString(),
     ayanamsa: Math.round(ayanamsa * 10000) / 10000,
@@ -402,9 +423,18 @@ export function vedicChart(input: ChartInput): VedicChart {
     },
     grahas,
     outerPlanets,
+    nodes: {
+      rahuSidereal,
+      ketuSidereal,
+      rahuSign: signOf(rahuSidereal),
+      ketuSign: signOf(ketuSidereal),
+      rahuHouse: houseFromLagna(rahuSidereal),
+      ketuHouse: houseFromLagna(ketuSidereal),
+      kind: "mean",
+    },
     moonNakshatra,
     dashas: vimshottariTimeline(utc, moonSidereal),
     method:
-      "Sidereal = tropical (astronomy-engine, as in the Western engine) − Lahiri ayanamsa (23.857° @ 2000 + 50.28″/yr). Nakshatra from the Moon's sidereal longitude; Vimshottari dasha per BPHS with 365.25-day years. Rahu/Ketu longitudes are not computed in this build (no node ephemeris in astronomy-engine).",
+      "Sidereal = tropical (astronomy-engine, as in the Western engine) − Lahiri ayanamsa (23.857° @ 2000 + 50.28″/yr). Nakshatra from the Moon's sidereal longitude; Vimshottari dasha per BPHS with 365.25-day years. Rahu/Ketu: MEAN nodes from Meeus's formula (Astronomical Algorithms) minus the same ayanamsa — labelled mean; the true node is an ephemeris upgrade.",
   };
 }

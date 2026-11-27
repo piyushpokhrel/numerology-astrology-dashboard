@@ -19,6 +19,10 @@ const NAV: ReadonlyArray<{ href: string; label: string; icon: string }> = [
   { href: "/western", label: "Western", icon: "☉" },
   { href: "/vedic", label: "Vedic", icon: "ॐ" },
   { href: "/report", label: "Full Report", icon: "▤" },
+  { href: "/science", label: "Science", icon: "⚛" },
+  { href: "/elements", label: "Elements", icon: "🜁" },
+  { href: "/chakras", label: "Chakras", icon: "☸" },
+  { href: "/karma-purpose", label: "Karma & Purpose", icon: "♻" },
   { href: "/red-book", label: "The Red Book", icon: "❦" },
 ];
 
