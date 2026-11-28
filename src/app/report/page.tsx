@@ -10,6 +10,7 @@
 import { useMemo } from "react";
 import { useProfile } from "@/components/ProfileProvider";
 import { ChartWorkbench } from "@/components/ChartWorkbench";
+import { VoiceNarration } from "@/components/VoiceNarration";
 import { Button, NoProfile, PageHeader } from "@/components/ui";
 import { coreProfile, displayNumber } from "@/lib/numerology";
 import { numberMeaning } from "@/lib/meanings";
@@ -82,6 +83,8 @@ function ReportDocument({
   const { core, chinese, outlook2027, western, vedic, currentDasha } = data;
 
   return (
+    <div>
+      {today && <VoiceNarration profile={profile} onDate={today} chartInput={input} />}
     <article className={`${paper} px-6 py-8 sm:px-10`}>
       {/* Header */}
       <header className="border-b-4 border-double border-neutral-800 pb-4">
@@ -245,5 +248,6 @@ function ReportDocument({
         reflection and entertainment. They are not medical, financial or legal advice.
       </footer>
     </article>
+    </div>
   );
 }
